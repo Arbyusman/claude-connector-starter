@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "markitdown": {
+      "command": "markitdown-mcp"
+    },
+    "figma-console": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "figma-console-mcp@latest"
+      ],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE",
+        "ENABLE_MCP_APPS": "true"
+      }
+    }
+  }
+}
