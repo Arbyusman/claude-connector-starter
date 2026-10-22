@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "markitdown": {
+      "command": "py",
+      "args": ["-3.12", "-m", "markitdown_mcp"]
+    },
+    "docling": {
+      "command": "C:\\Users\\MSI\\AppData\\Local\\Python\\pythoncore-3.12-64\\Scripts\\docling-mcp-server.exe",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "DOCLING_MCP_CONVERSION_MODE": "local",
+        "DOCLING_MCP_KEEP_IMAGES": "false",
+        "DOCLING_MCP_IMAGE_EXPORT_MODE": "placeholder",
+        "DOCLING_MCP_DO_OCR": "true",
+        "DOCLING_MCP_DO_TABLE_STRUCTURE": "true",
+        "DOCLING_MCP_DO_PICTURE_DESCRIPTION": "false"
+      }
+    },
+    "figma-console": {
+      "command": "npx",
+      "args": ["-y", "figma-console-mcp@latest"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "${FIGMA_ACCESS_TOKEN}",
+        "ENABLE_MCP_APPS": "true"
+      }
+    }
+  }
+}
