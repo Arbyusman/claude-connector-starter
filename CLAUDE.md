@@ -7,9 +7,14 @@
 ## MCP servers (project `.mcp.json`)
 - `markitdown` — `convert_to_markdown(uri)` for PDF/DOCX/PPTX/XLSX/HTML/EPUB/YouTube.
 - `docling` — OCR for scanned PDFs/images, tables as Markdown (images replaced by placeholders).
+- `docimage` (`tools/docimage_mcp.py`) — images inside .docx/.pdf: `list_images` → `read_image` (downscaled), `extract_images`, `render_pdf_page`, `insert_image_docx`, `insert_image_pdf`. Edits write `<name>.edited.<ext>`, never the original.
+- `canva` — official Canva remote MCP (OAuth; authenticate once via `/mcp`).
 - `figma-console` — Figma design-system access. Needs `FIGMA_ACCESS_TOKEN` env var.
 
+Setup on a new machine: run `setup.cmd` (installs everything and registers the servers with Claude Code + Claude Desktop).
+
 ## Token-saving rules
+- For images in documents: `list_images` first, then `read_image` only the ones needed, with a small `max_dim` (512-1024).
 - Never Read a PDF, Office file or image directly. Convert first: `markitdown` for digital docs, `docling` for scans. Save long output to a `.md` file and read only the parts needed.
 - Use Grep/Glob to locate code; Read with `offset`/`limit` instead of whole large files.
 - Don't re-read files just edited. Keep answers short; no recaps of unchanged code.

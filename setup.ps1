@@ -68,7 +68,7 @@ function Pip312 {
 function Py312-Has { param($module) & py -3.12 -c "import $module" 2>$null; return ($LASTEXITCODE -eq 0) }
 
 # ------------------------------------------------------------------ 1. tools
-Step "1/6  System tools (winget)"
+Step "1/7  System tools (winget)"
 Winget-Install "Git.Git"                 "Git"         { Has "git" }
 Winget-Install "OpenJS.NodeJS.LTS"       "Node.js"     { Has "npx" }
 Winget-Install "Python.Python.3.12"      "Python 3.12" { Has-Py312 }
@@ -79,7 +79,7 @@ if (-not $SkipHyperframes) {
 }
 
 # ------------------------------------------------------------ 2. markitdown
-Step "2/6  markitdown-mcp (Python 3.12)"
+Step "2/7  markitdown-mcp (Python 3.12)"
 if (-not (Has-Py312)) { Warn "Python 3.12 not available - skipping Python packages (re-run in a new terminal)" }
 elseif (Py312-Has "markitdown_mcp") { Ok "markitdown-mcp already installed" }
 else {
@@ -87,8 +87,17 @@ else {
     else { Warn "markitdown-mcp install failed - see pip output above" }
 }
 
+Step "2b   docimage (read/insert images in Word + PDF)"
+if (-not (Has-Py312)) { Warn "Python 3.12 not available - skipping docimage" }
+elseif ((Py312-Has "pymupdf") -and (Py312-Has "docx") -and (Py312-Has "PIL") -and (Py312-Has "mcp")) { Ok "docimage dependencies already installed" }
+else {
+    # --no-cache-dir: a flaky connection can leave a corrupt wheel in the cache (hash mismatch).
+    if ((Pip312 @("install", "--upgrade", "--no-cache-dir", "--timeout", "120", "--retries", "5", "mcp", "pymupdf", "python-docx", "pillow")) -eq 0) { Ok "docimage dependencies installed" }
+    else { Warn "docimage dependencies failed - see pip output above" }
+}
+
 # --------------------------------------------------------------- 3. docling
-Step "3/6  docling-mcp (OCR)"
+Step "3/7  docling-mcp (OCR)"
 if ($SkipDocling) { Info "skipped (-SkipDocling)" }
 elseif (-not (Has-Py312)) { Warn "Python 3.12 not available - skipping docling" }
 elseif ((Py312-Has "docling_mcp") -and (Py312-Has "docling")) { Ok "docling-mcp already installed" }
@@ -104,7 +113,7 @@ else {
 }
 
 # ---------------------------------------------------------------- 4. skills
-Step "4/6  Claude Code skills"
+Step "4/7  Claude Code skills"
 $skillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 New-Item -ItemType Directory -Force -Path $skillsDir | Out-Null
 
@@ -135,13 +144,23 @@ else {
 }
 
 # ----------------------------------------------------------------- 5. figma
-Step "5/6  Figma token"
+Step "5/7  Figma token"
 if (-not $FigmaToken) { $FigmaToken = [Environment]::GetEnvironmentVariable("FIGMA_ACCESS_TOKEN", "User") }
 if (-not $FigmaToken) {
     $envFile = Join-Path $Root "connectors\.env"
     if (Test-Path $envFile) {
         $line = Get-Content $envFile | Where-Object { $_ -match '^FIGMA_ACCESS_TOKEN=(figd_.+)$' -and $_ -notmatch 'YOUR_TOKEN' }
         if ($line) { $FigmaToken = ($line -split '=', 2)[1].Trim() }
+    }
+}
+if (-not $FigmaToken) {
+    # Reuse the token already saved in Claude Desktop's config, if any.
+    $desktopCfg = Join-Path $env:APPDATA "Claude\claude_desktop_config.json"
+    if (Test-Path $desktopCfg) {
+        try {
+            $t = (Get-Content -Raw $desktopCfg | ConvertFrom-Json).mcpServers.'figma-console'.env.FIGMA_ACCESS_TOKEN
+            if ($t -and $t -notmatch 'YOUR_TOKEN') { $FigmaToken = $t; Info "using the Figma token from Claude Desktop's config" }
+        } catch { }
     }
 }
 if (-not $FigmaToken) {
@@ -163,8 +182,18 @@ if ($WithDesktop) {
     & powershell @desktopArgs
 }
 
-# ---------------------------------------------------------------- 6. verify
-Step "6/6  Verify MCP servers"
+# ------------------------------------------------------- 6. register with Claude
+Step "6/7  Register connectors with Claude on this laptop"
+if (Has-Py312) {
+    $regArgs = @("-3.12", (Join-Path $Root "tools\register_mcp.py"))
+    if ($SkipDocling) { $regArgs += "--skip-docling" }
+    & py @regArgs
+    if ($LASTEXITCODE -ne 0) { Warn "registering MCP servers failed" }
+    Info "Canva: sign in once - Claude Code: /mcp > canva > Authenticate; Claude Desktop: Settings > Connectors > Canva"
+} else { Warn "Python 3.12 not available - cannot register MCP servers" }
+
+# ---------------------------------------------------------------- 7. verify
+Step "7/7  Verify MCP servers"
 $init = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"setup","version":"1"}}}'
 function Test-Server {
     param([string]$Label, [string[]]$Cmd)
@@ -173,6 +202,7 @@ function Test-Server {
 }
 if (Has-Py312) {
     Test-Server "markitdown" @("py", "-3.12", "-m", "markitdown_mcp")
+    Test-Server "docimage"   @("py", "-3.12", (Join-Path $Root "tools\docimage_mcp.py"))
     if (-not $SkipDocling) {
         Test-Server "docling" @("py", "-3.12", "-c", "from docling_mcp.servers.mcp_server import app; app()", "--transport", "stdio")
     }

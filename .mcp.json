@@ -16,6 +16,14 @@
         "DOCLING_MCP_DO_PICTURE_DESCRIPTION": "false"
       }
     },
+    "docimage": {
+      "command": "py",
+      "args": ["-3.12", "tools/docimage_mcp.py"]
+    },
+    "canva": {
+      "type": "http",
+      "url": "https://mcp.canva.com/mcp"
+    },
     "figma-console": {
       "command": "npx",
       "args": ["-y", "figma-console-mcp@latest"],
