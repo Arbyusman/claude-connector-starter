@@ -5,8 +5,8 @@
       "args": ["-3.12", "-m", "markitdown_mcp"]
     },
     "docling": {
-      "command": "C:\\Users\\MSI\\AppData\\Local\\Python\\pythoncore-3.12-64\\Scripts\\docling-mcp-server.exe",
-      "args": ["--transport", "stdio"],
+      "command": "py",
+      "args": ["-3.12", "-c", "from docling_mcp.servers.mcp_server import app; app()", "--transport", "stdio"],
       "env": {
         "DOCLING_MCP_CONVERSION_MODE": "local",
         "DOCLING_MCP_KEEP_IMAGES": "false",
