@@ -2,6 +2,7 @@
 
 ## Layout
 - `connectors/` — portable installer bundle for MCP servers + skills (Claude Desktop / Cursor / Claude Code). See `connectors/README.md`.
+- `docs/claude-mcp-setup.md` — panduan (ID): di mana Claude membaca config JSON, auto-register & troubleshooting connector tidak muncul.
 - `markitdown-main/` — vendored upstream copy of microsoft/markitdown. Treat as read-only; don't read or search it unless the task is about it.
 
 ## MCP servers (project `.mcp.json`)
